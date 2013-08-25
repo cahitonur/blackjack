@@ -1,3 +1,16 @@
+import ui.View as View;
+import ui.ImageView as ImageView;
+import device;
+
+var boundsWidth = 576;
+var boundsHeight = 1024;
+var baseWidth = boundsWidth;
+var baseHeight =  device.screen.height * (boundsWidth / device.screen.width);
+var card_width = 140;
+var card_height = 195;
+var pcard_y = baseHeight - 450;
+var dcard_y = 50;
+
 exports = Class(function() {
 	var suits = ['h', 's', 'd', 'c'];
 	var ranks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
@@ -44,7 +57,24 @@ function Card (suit, rank) {
 	this.show_face = true;
 	this._name = ""+this.suit+this._number.toString();
 	this.cvalue = function () {
-		var card_value = Math.min(10, this._number);
+		var card_value;
+		if (this._number == 1) {
+			card_value = 10
+		}
+		else {
+			card_value = Math.min(10, this._number);
+		}
 		return card_value;
+	}
+	this.image = function (cardx, cardy) {
+		var image_view = new ImageView ({
+			x: cardx,
+			y: cardy,
+			width: card_width,
+			height: card_height,
+			image: "resources/images/" + this._name + ".png",
+			zIndex: 1
+		});
+		return image_view;
 	}
 }

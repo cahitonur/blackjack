@@ -16,6 +16,10 @@ var card_width = 140;
 var card_height = 195;
 var pcard_y = baseHeight - 450;
 var dcard_y = 50;
+var player_cards = [], computer_cards = [], player_split_1 = [], player_split_2 = [];
+var new_deck = new Deck();
+var hit_c = 1;
+var split = false;
 
 exports = Class(ImageView, function (supr) {
 	this.init = function (opts) {
@@ -163,19 +167,15 @@ exports = Class(ImageView, function (supr) {
 		});
 		this._hit.on("InputSelect", hit.bind(this));
 
-		this.splitview = new TextView({
+		this.splitview = new ImageView({
 			superview: this,
 			x: - 200,
 			y: pcard_y - 100,
 			width: 100,
 			height: 50,
-			size: 30,
-			verticalAlign: 'middle',
-			horizontalAlign: 'center',
-			backgroundColor: '#949388',
-			color: '#FFFFFF',
-			text: "Split?"
+			image: "resources/images/split.png"
 		});
+		// this.splitview.on("InputSelect", split.bind(this));
 
 		this._stand = new View({
 			superview: this,
@@ -195,9 +195,6 @@ exports = Class(ImageView, function (supr) {
 		});
 		this._deal.on("InputSelect", start_game.bind(this));
 	};
-	this._callstand = function () {
-		stand.bind(this);
-	}
 });
 
 function handValue (hand) {
@@ -213,9 +210,6 @@ function handValue (hand) {
    	return total;
 }
 
-var player_cards = [], computer_cards = [], player_splits_1 = [], player_splits_2 = [];
-var new_deck = new Deck();
-var hit_c = 1;
 function start_game () {
 	var that = this;
 	if (gameon == false) {
@@ -251,12 +245,15 @@ function start_game () {
 	that.card_count.setText("Cards Left: " + new_deck.get_count())
 	player_cards.push(new_deck.dealCard());
 	that.card_count.setText("Cards Left: " + new_deck.get_count())
-	that.p1view.setImage(ImageMaker(player_cards[0]._name));
-	animate(that.p1view).now({x: (baseWidth / 2) - 150}, 500);
+	//that.p1view.setImage(ImageMaker(player_cards[0]._name));
+	//animate(that.p1view).now({x: (baseWidth / 2) - 150}, 500);
+	//var s1 = CardMaker(player_cards[0]._name, (baseWidth / 2) - 150)
+	that.addSubview(player_cards[0].image((baseWidth / 2) - 150, pcard_y));
+	that.addSubview(CardMaker(player_cards[1]._name, (baseWidth / 2) - 50));
 	that.d1view.setImage(ImageMaker(computer_cards[1]._name));
 	animate(that.d1view).now({x: (baseWidth / 2) - 50}, 500);
-	that.p2view.setImage(ImageMaker(player_cards[1]._name));
-	animate(that.p2view).now({x: (baseWidth / 2) - 50}, 500);
+	//that.p2view.setImage(ImageMaker(player_cards[1]._name));
+	//animate(that.p2view).now({x: (baseWidth / 2) - 50}, 500);
 	that.playerhand.setText(handValue(player_cards).toString());
 	var playerTotal = handValue(player_cards);
 	var dealerTotal = handValue(computer_cards);
@@ -414,6 +411,28 @@ function stand () {
         }
 	}
 	takeNextCardOrFinish();
+}
+
+/*function split () {
+	var that = this;
+	split = true;
+	player_split_1.push(player_cards[0]);
+	player_split_2.push(player_cards[1]);
+	animate(that.splitview).now({x: -200}, 700);
+	animate(that.p2view).now({x: baseWidth + (card_width / 2)}, 500);
+	that._status.setText("Hit or Stand?");
+}*/
+
+function CardMaker (cardname, cardx) {
+	var card_view = new ImageView({
+		x: cardx,
+		y: pcard_y,
+		width: card_width,
+		height: card_height,
+		image: "resources/images/" + cardname + ".png"
+		// zIndex: 0
+	});
+	return card_view;
 }
 
 function ImageMaker (cardname) {

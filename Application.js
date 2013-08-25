@@ -1,7 +1,7 @@
 import device;
 import ui.StackView as StackView;
 import src.TitleScreen as TitleScreen;
-import src.GameScreen as GameScreen;
+import src.GameScreen1 as GameScreen;
 
 var boundsWidth = 576;
 var boundsHeight = 1024;
