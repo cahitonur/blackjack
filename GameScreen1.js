@@ -165,7 +165,7 @@ function start_game () {
 	// Add card views
 	that.addSubview(CardMaker("back", (baseWidth / 2) - 150, dcard_y));
 	that.addSubview(computer_cards[1].image((baseWidth / 2) - 100, dcard_y));
-	that.addSubview(player_cards[0].image((baseWidth / 2) - 150, pcard_y));
+	that.addSubview(player_cards[0].image((baseWidth / 2) - 160, pcard_y));
 	that.addSubview(player_cards[1].image((baseWidth / 2) - 120, pcard_y));
 
 	that.playerhand.setText(handValue(player_cards).toString());
@@ -272,7 +272,7 @@ function hit () {
 		animate(that._splitview).now({x: - 200}, 700);
 		player_cards.push(new_deck.dealCard());
 		p1_index = that.getSubviews().slice(-2)[0].getPosition();
-		that.addSubview(player_cards.slice(-1)[0].image(p1_index.x + 60, pcard_y));
+		that.addSubview(player_cards.slice(-1)[0].image(p1_index.x + 30, pcard_y));
 		that.playerhand.setText(handValue(player_cards).toString());
 		if (handValue(player_cards) == 21) {
 			that._hit.hide();

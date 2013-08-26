@@ -1,13 +1,13 @@
 import device;
 import ui.StackView as StackView;
 import src.TitleScreen as TitleScreen;
-import src.GameScreen1 as GameScreen;
+import src.GameScreen as GameScreen;
 
-var boundsWidth = 576;
-var boundsHeight = 1024;
-var baseWidth = boundsWidth;
-var baseHeight =  device.screen.height * (boundsWidth / device.screen.width);
-var scale = device.screen.width / baseWidth;
+var boundsWidth = 1024;
+var boundsHeight = 576;
+var baseWidth = device.screen.width * (boundsHeight / device.screen.height);
+var baseHeight = boundsHeight;
+var scale = device.screen.height / baseHeight;
 
 exports = Class(GC.Application, function () {
 

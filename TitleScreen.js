@@ -1,52 +1,28 @@
 import ui.View as View;
+import ui.ImageView as ImageView;
 import ui.TextView as TextView;
 import device;
 
-var boundsWidth = 576;
-var boundsHeight = 1024;
-var baseWidth = boundsWidth;
-var baseHeight =  device.screen.height * (boundsWidth / device.screen.width);
+var boundsWidth = 1024;
+var boundsHeight = 576;
+var baseWidth = device.screen.width * (boundsHeight / device.screen.height);
+var baseHeight = boundsHeight;
+var scale = device.screen.height / baseHeight;
 
-exports = Class(View, function (supr){
+exports = Class(ImageView, function (supr){
 	this.init = function (opts) {
 		opts = merge(opts, {
 			x: 0,
 			y: 0,
 			width: baseWidth,
 			height: baseHeight,
-			backgroundColor: '#a9cf88'
+			image: 'resources/images/onu211.png'
 		});
 
 		supr(this, 'init', [opts]);
 		this.build();
 	};
 	this.build = function () {
-
-		this.welcome_bar = new TextView ({
-			superview: this,
-			x: (baseWidth / 2) - 150,
-			y: (baseHeight / 2),
-			width: 300,
-			height: 100,
-			size: 42,
-			verticalAlign: 'middle',
-			horizontalAlign: 'center',
-			wrap: true,
-			color: '#FFFFFF',
-			text: 'BlackJack!'
-		});
-		this.start_button = new TextView ({
-			superview: this,
-			x: (baseWidth / 2) - 150,
-			y: (baseHeight / 2) + 50,
-			width: 300,
-			height: 100,
-			size: 42,
-			verticalAlign: 'middle',
-			horizontalAlign: 'center',
-			color: 'FFFFFF',
-			text: 'Tap to Start'
-		});
 		var start = new View ({
 			superview: this,
 			x: 0,
