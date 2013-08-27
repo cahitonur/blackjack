@@ -7,23 +7,24 @@ import ui.widget.ButtonView as ButtonView;
 import device;
 import src.Deck as Deck;
 
-var gameon = false;
-var boundsWidth = 1024;
-var boundsHeight = 576;
-var baseWidth = device.screen.width * (boundsHeight / device.screen.height);
-var baseHeight = boundsHeight;
-var scale = device.screen.height / baseHeight;
-var card_width = 140;
-var card_height = 195;
-var pcard_y = baseHeight - 250;
-var dcard_y = 50;
-var player_cards = [], computer_cards = [], player_split_1 = [], player_split_2 = [];
-var new_deck = new Deck();
-var hit_c = 1;
-var split = false;
-var split1 = false;
-var split2 = false;
-var pot = 0;
+var gameon = false,
+boundsWidth = 1024,
+boundsHeight = 576,
+baseWidth = device.screen.width * (boundsHeight / device.screen.height),
+baseHeight = boundsHeight,
+scale = device.screen.height / baseHeight,
+card_width = 140,
+card_height = 195,
+pcard_y = baseHeight - 250,
+dcard_y = 50,
+player_cards = [], computer_cards = [], player_split_1 = [], player_split_2 = [],
+new_deck = new Deck(),
+split = false,
+split1 = false,
+split2 = false,
+bet = 0,
+bankroll = 1000,
+p1_x = (baseWidth / 2) - (card_width / 2);
 
 exports = Class(ImageView, function (supr) {
 	this.init = function (opts) {
@@ -40,7 +41,7 @@ exports = Class(ImageView, function (supr) {
 		this.build();
 	};
 	this.build = function () {
-		this.on('app:start', start_game.bind(this));
+		//this.on('app:start', start_game.bind(this));
 		gameon = true;
 		this._status = new TextView({
 			superview: this,
@@ -48,21 +49,99 @@ exports = Class(ImageView, function (supr) {
 			y: 10,
 			width: 200,
 			height: 50,
-			fontFamily: "Tahoma",
+			fontFamily: "king_richard_rg",
 			autoSize: false,
 			size: 30,
 			verticalAlign: 'middle',
 			horizontalAlign: 'center',
 			wrap: true,
-			color: '#FFFFFF'
+			color: '#FFFFFF',
+			text: "Place Your Bet"
 		});
+		this._bet = new TextView({
+			superview: this,
+			x: (baseWidth / 2) - 50,
+			y: 60,
+			width: 100,
+			height: 50,
+			fontFamily: "king_richard_it",
+			autoSize: false,
+			size: 30,
+			verticalAlign: 'middle',
+			horizontalAlign: 'center',
+			wrap: true,
+			color: '#FFFFFF',
+			text: bet
+		});
+		this._bankroll = new TextView({
+			superview: this,
+			x: baseWidth - 180,
+			y: 60,
+			width: 150,
+			height: 50,
+			fontFamily: "king_richard_rg",
+			verticalAlign: 'middle',
+			horizontalAlign: 'right',
+			color: 'FFFFFF',
+			size: 30
+		});
+		this._chip5 = new ImageView({
+			superview: this,
+			x: baseWidth - 104,
+			y: baseHeight - 460,
+			width: 72,
+			height: 72,
+			image: "resources/images/5.png"
+		});
+		this._chip5.on("InputSelect", set_bet.bind(this, 5));
+
+		this._chip10 = new ImageView({
+			superview: this,
+			x: baseWidth - 104,
+			y: baseHeight - 378,
+			width: 72,
+			height: 72,
+			image: "resources/images/10.png"
+		});
+		this._chip10.on("InputSelect", set_bet.bind(this, 10));
+
+		this._chip50 = new ImageView({
+			superview: this,
+			x: baseWidth - 104,
+			y: baseHeight - 296,
+			width: 72,
+			height: 72,
+			image: "resources/images/50.png"
+		});
+		this._chip50.on("InputSelect", set_bet.bind(this, 50));
+
+		this._chip100 = new ImageView({
+			superview: this,
+			x: baseWidth - 102,
+			y: baseHeight - 214,
+			width: 72,
+			height: 72,
+			image: "resources/images/100.png"
+		});
+		this._chip100.on("InputSelect", set_bet.bind(this, 100));
+
+		this._chip500 = new ImageView({
+			superview: this,
+			x: baseWidth - 102,
+			y: baseHeight - 132,
+			width: 72,
+			height: 72,
+			image: "resources/images/500.png"
+		});
+		this._chip500.on("InputSelect", set_bet.bind(this, 500));
+
 		this.playerhand = new TextView({
 			superview: this,
 			x:(baseWidth / 2) - 25,
 			y: pcard_y - 50,
 			width: 50,
 			height: 50,
-			fontFamily: "Tahoma",
+			fontFamily: "king_richard_it",
 			verticalAlign: 'middle',
 			horizontalAlign: 'right',
 			color: 'FFFFFF',
@@ -74,7 +153,7 @@ exports = Class(ImageView, function (supr) {
 			y: 35,
 			width: 50,
 			height: 50,
-			fontFamily: "Tahoma",
+			fontFamily: "king_richard_it",
 			verticalAlign: 'middle',
 			horizontalAlign: 'center',
 			color: 'FFFFFF',
@@ -86,9 +165,9 @@ exports = Class(ImageView, function (supr) {
 			y: 10,
 			width: 150,
 			height: 50,
-			fontFamily: "Tahoma",
+			fontFamily: "king_richard_rg",
 			verticalAlign: 'middle',
-			horizontalAlign: 'center',
+			horizontalAlign: 'right',
 			color: 'FFFFFF',
 			size: 30
 		});
@@ -100,6 +179,7 @@ exports = Class(ImageView, function (supr) {
 			y: 0,
 		});
 		this._hit.on("InputSelect", hit.bind(this));
+		this._hit.style.visible = false;
 
 		this._splitview = new ImageView({
 			superview: this,
@@ -114,10 +194,6 @@ exports = Class(ImageView, function (supr) {
 
 		this._stand = new View({
 			superview: this,
-			width: (baseWidth / 2),
-			height: card_height,
-			x: 300,
-			y: pcard_y,
 			zIndex: 2
 		});
 		this._stand.on("InputSelect", stand.bind(this));
@@ -127,41 +203,69 @@ exports = Class(ImageView, function (supr) {
 			width: baseWidth,
 			height: baseHeight,
 			x: 0,
-			y: 0,
+			y: 0
 		});
-		this._deal.style.visible = false;
+		this._deal.hide();
 		this._deal.on("InputSelect", start_game.bind(this));
 	};
 	this.game_reset = function () {
 		this._deal.style.visible = false;
-		this._hit.show();
+		this._hit.style.width = baseWidth;
+		this._hit.style.visible = true;
 		this._stand.show();
 		player_cards.length = 0;
 		computer_cards.length = 0;
 		player_split_1.length = 0;
 		player_split_2.length = 0;
-		hit_c = 1;
+		bankroll -= bet;
 		split = false;
 		this.dealerhand.setText("");
 		this.card_count.setText("Cards Left: " + new_deck.get_count())
-		this._stand.style.x = 0;
-		this._stand.style.y = pcard_y;
-		this._stand.style.width = baseWidth;
-		this._stand.style.height = card_height;
+		this.stand_adapt();
 		this.playerhand.style.x = (baseWidth / 2) - 25;
 	}
+	this.stand_adapt = function () {
+		this._stand.style.x = p1_x;
+		this._stand.style.y = pcard_y;
+		this._stand.style.width = card_width + 30;
+		this._stand.style.height = card_height;
+	}
+	this.bring_stand_front = function () {
+		this._hit.hide();
+		this._stand.style.x = 0;
+		this._stand.style.y = 0;
+		this._stand.style.width = baseWidth;
+		this._stand.style.height = baseHeight;
+		this._stand.style.zIndex = 999;
+	}
+	this.bring_deal_front = function () {
+		gameon = false;
+        this._hit.hide();
+        this._stand.hide();
+        this._deal.style.visible = true;
+	}
 });
+
+function set_bet (amount) {
+	var that = this;
+		bet += amount;
+		that._bet.setText("$ " + bet);
+		that._status.setText("Tap Desk to Deal");
+		that._deal.show();
+		that._deal.style.width = baseWidth - 114;
+	}
 
 function start_game () {
 	var that = this;
 	if (gameon == false) {
 		gameon = true;
-		view_list = that.getSubviews().slice(7, -1);
+		view_list = that.getSubviews().slice(14, -1);
 		for (var i = view_list.length - 1; i >= 0; i--) {
 			that.removeSubview(view_list[i]);
 		};
 	}
 	that.game_reset();
+	that._bankroll.setText("$ " + bankroll);
 	// Deal Cards
 	computer_cards.push(new_deck.dealCard());
 	player_cards.push(new_deck.dealCard());
@@ -170,18 +274,17 @@ function start_game () {
 	// Add card views
 	that.addSubview(CardMaker("back", baseWidth / 6, dcard_y));
 	that.addSubview(computer_cards[1].image((baseWidth / 6) + 30, dcard_y));
-	that.addSubview(player_cards[0].image(baseWidth / 4, pcard_y));
-	that.addSubview(player_cards[1].image((baseWidth / 4) + 30, pcard_y));
+	that.addSubview(player_cards[0].image(p1_x, pcard_y));
+	that.addSubview(player_cards[1].image(p1_x + 30, pcard_y));
 
 	that.playerhand.setText(handValue(player_cards).toString());
-
+	// check player hand against blackjack and over
+	// and split situation
+	// TO DO: Double situations
 	if (handValue(player_cards) == 21) {
 		that._status.setText("Blackjack!");
 		that._hit.hide();
-		that._stand.style.x = 0;
-		that._stand.style.y = 0;
-		that._stand.style.width = baseWidth;
-		that._stand.style.height = baseHeight;
+		that.bring_stand_front();
 	}
 	else if (handValue(player_cards) > 21) {
 		that._status.setText("Busted!");
@@ -206,32 +309,20 @@ function hit () {
 			// add card to players first hand
 			player_split_1.push(new_deck.dealCard());
 			// show card
-			that.addSubview(player_split_1.slice(-1)[0].image(baseWidth / 4 + (player_split_1.length - 1) * 30, pcard_y));
+			that.addSubview(player_split_1.slice(-1)[0].image(p1_x + (player_split_1.length - 1) * 30, pcard_y));
 			// set playerhand indicator
 			that.playerhand.setText(handValue(player_split_1).toString());
+			that._stand.style.width += 30;
 			// check if player have blackjack or busted
 			if (handValue(player_split_1) == 21) {
-				that._hit.hide();
-				that._stand.style.x = 0;
-				that._stand.style.y = 0;
-				that._stand.style.width = baseWidth;
-				that._stand.style.height = baseHeight;
+				// if 21 hide hit force user to tap stand
+				// TO DO: Find another way to stand function without user input
+				that.bring_stand_front();
 				that._status.setText("You have 21! Tap to continue.");
 			}
 			else if (handValue(player_split_1) > 21) {
 				that._status.setText("Busted! Tap to continue.");
-				that._hit.hide();
-        		that._stand.style.x = 0;
-				that._stand.style.y = 0;
-				that._stand.style.width = baseWidth;
-				that._stand.style.height = baseHeight;
-				// pul the cards out of screen
-				first_card = that.getSubview(9);
-        		busted_cards = that.getSubviews().slice(11, -1);
-        		animate(first_card).now({x: 30}, 700);
-        		for (var i = busted_cards.length - 1; i >= 0; i--) {
-        			animate(busted_cards[i]).now({x: 30}, 700);
-        		};
+				that.bring_stand_front();
 			}
 			else {
 				that._status.setText("Hit or Stand?");
@@ -240,24 +331,17 @@ function hit () {
 		else if (split2) {
 			// add card to the second group of cards
 			player_split_2.push(new_deck.dealCard());
-			p1_index = that.getSubview(10).getPosition();
-			that.addSubview(player_split_2.slice(-1)[0].image(baseWidth /2 + (player_split_2.length - 1) * 30, pcard_y));
+			that.addSubview(player_split_2.slice(-1)[0].image(p1_x + (player_split_2.length - 1) * 30, pcard_y));
+			that._stand.style.width += 30;
 			that.playerhand.setText(handValue(player_split_2).toString());
+			// check if player have 21 or more
 			if (handValue(player_split_2) == 21) {
-				that._hit.hide();
-				that._stand.style.x = 0;
-				that._stand.style.y = 0;
-				that._stand.style.width = baseWidth;
-				that._stand.style.height = baseHeight;
+				that.bring_stand_front();
 				that._status.setText("You have 21! Tap to continue.");
 			}
 			else if (handValue(player_split_2) > 21) {
 				that._status.setText("Busted! Tap to continue.");
-				that._hit.hide();
-        		that._stand.style.x = 0;
-				that._stand.style.y = 0;
-				that._stand.style.width = baseWidth;
-				that._stand.style.height = baseHeight;
+				that.bring_stand_front();
 			}
 			else {
 				that._status.setText("Hit or Stand?");
@@ -267,15 +351,11 @@ function hit () {
 	else {
 		animate(that._splitview).now({x: - 200}, 700);
 		player_cards.push(new_deck.dealCard());
-		p1_index = that.getSubviews().slice(-2)[0].getPosition();
-		that.addSubview(player_cards.slice(-1)[0].image(baseWidth / 4 + (player_cards.length - 1) * 30, pcard_y));
+		that.addSubview(player_cards.slice(-1)[0].image(p1_x + (player_cards.length - 1) * 30, pcard_y));
+		that._stand.style.width += 30;
 		that.playerhand.setText(handValue(player_cards).toString());
 		if (handValue(player_cards) == 21) {
-			that._hit.hide();
-			that._stand.style.x = 0;
-			that._stand.style.y = 0;
-			that._stand.style.width = baseWidth;
-			that._stand.style.height = baseHeight;
+			that.bring_stand_front();
 			that._status.setText("You have 21!");
 		}
 		else if (handValue(player_cards) > 21) {
@@ -296,43 +376,38 @@ function stand () {
 	if (split) {
 		if (split1) {
 			// pull the cards to the left of screen
-			first_card = that.getSubview(9);
-        	good_cards = that.getSubviews().slice(11, -1);
-        	animate(first_card).now({x: 30}, 700);
+			first_card = that.getSubview(16);
+        	good_cards = that.getSubviews().slice(18, -1);
+        	animate(first_card).now({x: 30}, 700, animate.easeOut);
         	for (var i = 0; i < good_cards.length; i++) {
-        		animate(good_cards[i]).now({x: (i * 30) + 60}, 700);
+        		animate(good_cards[i]).now({x: (i * 30) + 60}, 700, animate.easeOut);
         	};
         	that.playerhand.setText(handValue(player_split_2).toString());
         	// button arrangement
         	that._hit.show();
-        	that._stand.style.x = (baseWidth / 2) - 150;
-			that._stand.style.y = pcard_y;
-			that._stand.style.width = 300;
-			that._stand.style.height = card_height;
+        	that.stand_adapt();
 			// pull players second splits first card to the table
-			animate(that.getSubview(10)).now({x: baseWidth / 2}, 700);
+			animate(that.getSubview(17)).wait(700)
+				.then({x: p1_x}, 700, animate.easeIn);
 			split1 = false;
 			split2 = true;
 		}
 		else if (split2) {
 			if (player_split_2.length == 1) {
 				that._hit.show();
-        		that._stand.style.x = (baseWidth / 2) - 150;
-				that._stand.style.y = pcard_y;
-				that._stand.style.width = 300;
-				that._stand.style.height = card_height;
+        		that.stand_adapt();
 			}
 			else {
 				split2 = false;
-				that.getSubview(7).setImage(ImageMaker(computer_cards[0]._name));
+				that.getSubview(14).setImage(ImageMaker(computer_cards[0]._name));
 				that.playerhand.setText("");
 				var takeNextCardOrFinish = function() {
         			var split_status2 = new TextView({
-        				x: baseWidth / 2 + 50,
+        				x: baseWidth / 2 - 60,
 						y: pcard_y - 50,
 						width: 120,
 						height: 50,
-						fontFamily: "Tahoma",
+						fontFamily: "king_richard_it",
 						verticalAlign: 'middle',
 						horizontalAlign: 'center',
 						color: 'FFFFFF',
@@ -350,77 +425,75 @@ function stand () {
 					else if (dealerTotal == 21) {
         				if (computer_cards.length == 2 && player_split_2.length == 2 && handValue(player_split_2) == 21) {
         					split_status2.setText("PUSH!");
+        					bankroll += bet;
         				}
         				else if (computer_cards.length == 2) {
         					that._status.setText("Dealer have Blackjack!");
         					split_status2.setText(handValue(player_split_2));
+        					bankroll -= bet;
         				}
         				else if (computer_cards.length > 2 && player_split_2.length == 2 && handValue(player_split_2) == 21) {
         					split_status2.setText("WIN!");
+        					bankroll += bet + (bet * 1.5);
         				}
         				else if (computer_cards.length > 2 && player_split_2.length > 2 && handValue(player_split_2) == 21) {
         					split_status2.setText("PUSH!");
+        					bankroll += bet;
         				}
         				else {
         					split_status2.setText("LOSE!");
         				}
-            			gameon = false;
-            			that._hit.hide();
-            			that._stand.hide();
-            			that._deal.style.visible = true;
-            			checkSecondGroup();
+        				that._bankroll.setText("$ " + bankroll);
+            			end_game();
+        			}
+        			else if (handValue(player_split_2) == 21 && player_split_2.length == 2) {
+        				split_status2.setText("WIN!");
+        				bankroll += bet + (bet * 1.5);
+                		end_game();
         			}
         			else if (handValue(player_split_2) > 21) {
                 		split_status2.setText("Busted!");
-                		gameon = false;
-            			that._hit.hide();
-            			that._stand.hide();
-            			that._deal.style.visible = true;
-            			checkSecondGroup();
+                		end_game();
             		}
         			else if (dealerTotal > 21) {
 		            	split_status2.setText("WIN!");
-		            	gameon = false;
-            			that._hit.hide();
-            			that._stand.hide();
-            			that._deal.style.visible = true;
-            			checkSecondGroup();
+		            	bankroll += bet * 2;
+		            	that._bankroll.setText("$ " + bankroll);
+		            	end_game();
         			}
         			else {
         				if (handValue(player_split_2) > dealerTotal) {
                 			split_status2.setText("WIN!");
-                			gameon = false;
-            				that._hit.hide();
-            				that._stand.hide();
-            				that._deal.style.visible = true;
-            				checkSecondGroup();
+                			bankroll += bet * 2;
+                			end_game();
             			}
             			else if (handValue(player_split_2) < dealerTotal) {
                 			split_status2.setText("LOSE!");
-                			gameon = false;
-            				that._hit.hide();
-            				that._stand.hide();
-            				that._deal.style.visible = true;
-            				checkSecondGroup();
+                			end_game();
             			}
             			else {
                				split_status2.setText("PUSH!");
-                			gameon = false;
-            				that._hit.hide();
-            				that._stand.hide();
-            				that._deal.style.visible = true;
-            				checkSecondGroup();
+               				bankroll += bet;
+                			end_game();
             			}
+            			that._bankroll.setText("$ " + bankroll);
         			}
+        		}
+        		var end_game = function () {
+        			gameon = false;
+            		that._hit.hide();
+            		that._stand.hide();
+            		that._deal.style.visible = true;
+            		checkSecondGroup();
         		}
         		var checkSecondGroup = function () {
         			var dealerTotal = handValue(computer_cards);
         			var split_status1 = new TextView({
-        				x: 80,
+        				x: 60,
 						y: pcard_y - 50,
 						width: 120,
 						height: 50,
-						fontFamily: "Tahoma",
+						fontFamily: "king_richard_it",
 						verticalAlign: 'middle',
 						horizontalAlign: 'center',
 						color: 'FFFFFF',
@@ -434,6 +507,7 @@ function stand () {
         			else if (dealerTotal == 21) {
         				if (computer_cards.length == 2 && player_split_1.length == 2 && handValue(player_split_1) == 21) {
         					split_status1.setText("PUSH!");
+        					bankroll += bet;
         				}
         				else if (computer_cards.length == 2) {
         					that._status.setText("Dealer have Blackjack!");
@@ -441,27 +515,40 @@ function stand () {
         				}
         				else if (computer_cards.length > 2 && player_split_1.length == 2 && handValue(player_split_1) == 21) {
         					split_status1.setText("WIN!");
+        					bankroll += bet + (bet * 1.5);
         				}
         				else if (computer_cards.length > 2 && player_split_1.length > 2 && handValue(player_split_1) == 21) {
         					split_status1.setText("PUSH!");
+        					bankroll += bet;
         				}
         				else {
         					split_status1.setText("LOSE!");
         				}
+        				that._bankroll.setText("$ " + bankroll);
+        			}
+        			else if (handValue(player_split_1) == 21 && player_split_1.length == 2) {
+        				split_status1.setText("WIN!");
+        				bankroll += bet + (bet * 1.5);
+        				that._bankroll.setText("$ " + bankroll);
         			}
         			else if (dealerTotal > 21) {
 		            	split_status1.setText("WIN!");
+		            	bankroll += bet * 2;
+		            	that._bankroll.setText("$ " + bankroll);
         			}
         			else {
         				if (handValue(player_split_1) > dealerTotal) {
                 			split_status1.setText("WIN!");
+                			bankroll += bet * 2;
             			}
             			else if (handValue(player_split_1) < dealerTotal) {
                 			split_status1.setText("LOSE!");
             			}
             			else {
                				split_status1.setText("PUSH!");
+               				bankroll += bet;
             			}
+            			that._bankroll.setText("$ " + bankroll);
         			}
         		}
 				takeNextCardOrFinish();
@@ -470,8 +557,8 @@ function stand () {
 	}
 	else {
 		gameon = false;
-		animate(that._splitview).now({x: - 200}, 700);
-		that.getSubview(7).setImage(ImageMaker(computer_cards[0]._name));
+		animate(that._splitview).now({x: - 200}, 700, animate.easeOut);
+		that.getSubview(14).setImage(ImageMaker(computer_cards[0]._name));
 		var playerTotal = handValue(player_cards);
 		var takeNextCardOrFinish = function() {
 			var dealerTotal = handValue(computer_cards);
@@ -484,50 +571,49 @@ function stand () {
 			else if (dealerTotal == 21) {
         		if (computer_cards.length == 2 && player_cards.length == 2 && playerTotal == 21) {
         			that._status.setText("PUSH!");
+        			bankroll += bet;
         		}
         		else if (computer_cards.length == 2) {
         			that._status.setText("Dealer have Blackjack!");
         		}
         		else if (computer_cards.length > 2 && player_cards.length == 2 && playerTotal == 21) {
         			that._status.setText("You win!");
+        			bankroll += bet + (bet * 1.5);
         		}
         		else {
         			that._status.setText("Dealer win!");
         		}
-            	gameon = false;
-            	that._hit.hide();
-            	that._stand.hide();
-            	that._deal.style.visible = true;
+            	that.bring_deal_front();
+            	that._bankroll.setText("$ " + bankroll);
+        	}
+        	else if (playerTotal == 21 && player_cards.length == 2) {
+        		that._status.setText("Your BJ win!");
+            	bankroll += bet + (bet * 1.5);
+            	that._bankroll.setText("$ " + bankroll);
+            	that.bring_deal_front();
         	}
         	else if (dealerTotal > 21) {
             	that._status.setText("You win!");
-            	gameon = false;
-            	that._hit.hide();
-            	that._stand.hide();
-            	that._deal.style.visible = true;
+            	bankroll += bet * 2;
+            	that._bankroll.setText("$ " + bankroll);
+            	that.bring_deal_front();
         	}
         	else {
         		if (playerTotal > dealerTotal) {
                 	that._status.setText("You win!");
-                	gameon = false;
-            		that._hit.hide();
-            		that._stand.hide();
-            		that._deal.style.visible = true;
+                	bankroll += bet * 2;
+                	that.bring_deal_front();
             	}
             	else if (playerTotal < dealerTotal) {
                 	that._status.setText("Dealer win!");
-                	gameon = false;
-            		that._hit.hide();
-            		that._stand.hide();
-            		that._deal.style.visible = true;
+                	that.bring_deal_front();
             	}
             	else {
                 	that._status.setText("PUSH!");
-                	gameon = false;
-            		that._hit.hide();
-            		that._stand.hide();
-            		that._deal.style.visible = true;
+                	that.bring_deal_front();
+                	bankroll += bet;
             	}
+            	that._bankroll.setText("$ " + bankroll);
         	}
 		}
 		takeNextCardOrFinish();
@@ -567,10 +653,12 @@ function SplitHand () {
 	var that = this;
 	split = true;
 	split1 = true;
+	bankroll -= bet;
+	that._bankroll.setText("$ " + bankroll);
 	player_split_1.push(player_cards[0]);
 	player_split_2.push(player_cards[1]);
 	animate(that._splitview).now({x: -200}, 700);
-	animate(that.getSubviews().slice(-2)[0]).now({x: baseWidth - (card_width / 2)}, 500);
+	animate(that.getSubviews().slice(-2)[0]).now({x: baseWidth - (card_width / 2)}, 500, animate.easeOut);
 	that._status.setText("Hit or Stand?");
 	that.playerhand.setText(handValue(player_split_1).toString());
 }
