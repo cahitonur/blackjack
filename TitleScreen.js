@@ -2,6 +2,7 @@ import ui.View as View;
 import ui.ImageView as ImageView;
 import ui.TextView as TextView;
 import device;
+import AudioManager;
 
 var boundsWidth = 1024;
 var boundsHeight = 576;
@@ -20,6 +21,15 @@ exports = Class(ImageView, function (supr){
 		});
 
 		supr(this, 'init', [opts]);
+		this._sound = new AudioManager({
+			path: "resources/audio/",
+
+			files: {
+				shuffle_sound: {
+					volume: 0.8
+				}
+			}
+		});
 		this.build();
 	};
 	this.build = function () {
@@ -32,6 +42,7 @@ exports = Class(ImageView, function (supr){
 		});
 		start.on('InputStart', bind(this, function () {
 			this.emit('titlescreen:start');
+			this._sound.play('shuffle_sound');
 		}));
 	};
 });

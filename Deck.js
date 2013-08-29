@@ -1,6 +1,7 @@
 import ui.View as View;
 import ui.ImageView as ImageView;
 import device;
+import math.array as array;
 
 var boundsWidth = 576;
 var boundsHeight = 1024;
@@ -23,15 +24,7 @@ exports = Class(function() {
 				};
 			};
 		};
-
-		var counter = deck.length, temp, index;
-
-    	while (counter--) {
-        	index = (Math.random() * counter) | 0;
-        	temp = deck[counter];
-        	deck[counter] = deck[index];
-        	deck[index] = temp;
-    	};
+		array.shuffle(deck);
 	}
 	this.reset = function () {
 		deck = []
