@@ -288,7 +288,8 @@ function betreset () {
 
 function set_bet (amount) {
 	var that = this;
-	if (bankroll > 0) {
+	that._bet_reset.show();
+	if (bankroll >= bet + amount) {
 		bet += amount;
 		that._bet.setText("$ " + bet);
 		that._sound.play('chip');
@@ -297,9 +298,7 @@ function set_bet (amount) {
 		that._deal.style.width = baseWidth - 114;
 	}
 	else {
-		bet = 0;
-		that._status.setText("Buy Chips!");
-		that._bet.setText("$ " + 0);
+		that._status.setText("Not Enough Chips!");
 	}
 }
 
@@ -436,7 +435,7 @@ function hit () {
 			}
 			else if (handValue(player_split_2) > 21) {
 				that._status.setText("Busted!");
-				that._bet_reset.show();
+				// that._bet_reset.show();
 				setTimeout(function () {
 					that.emit("Stand");
 				}, 500);
@@ -812,7 +811,7 @@ function SplitHand () {
 
 function DoubleDown () {
 	var that = this;
-	if (bankroll > bet * 2) {
+	if (bankroll >= bet) {
 		bankroll -= bet;
 		that._bankroll.setText("$ " + bankroll);
 		bet = bet * 2
